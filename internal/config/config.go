@@ -2,88 +2,61 @@ package config
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"net/http"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/Ehco1996/ehco/internal/constant"
-	"github.com/xtls/xray-core/infra/conf"
+	"github.com/Ehco1996/ehco/internal/relay/conf"
+	"github.com/Ehco1996/ehco/internal/tls"
+	myhttp "github.com/Ehco1996/ehco/pkg/http"
+	xConf "github.com/xtls/xray-core/infra/conf"
+	"go.uber.org/zap"
 )
 
-type RelayConfig struct {
-	Listen        string   `json:"listen"`
-	ListenType    string   `json:"listen_type"`
-	TransportType string   `json:"transport_type"`
-	TCPRemotes    []string `json:"tcp_remotes"`
-	UDPRemotes    []string `json:"udp_remotes"`
-	Label         string   `json:"label"`
-}
-
-func (r *RelayConfig) Validate() error {
-	if r.ListenType != constant.Listen_RAW &&
-		r.ListenType != constant.Listen_WS &&
-		r.ListenType != constant.Listen_WSS &&
-		r.ListenType != constant.Listen_MTCP &&
-		r.ListenType != constant.Listen_MWSS {
-		return fmt.Errorf("invalid listen type:%s", r.ListenType)
-	}
-
-	if r.TransportType != constant.Transport_RAW &&
-		r.TransportType != constant.Transport_WS &&
-		r.TransportType != constant.Transport_WSS &&
-		r.TransportType != constant.Transport_MTCP &&
-		r.TransportType != constant.Transport_MWSS {
-		return fmt.Errorf("invalid transport type:%s", r.ListenType)
-	}
-
-	if r.Listen == "" {
-		return fmt.Errorf("invalid listen:%s", r.Listen)
-	}
-
-	for _, addr := range r.TCPRemotes {
-		if addr == "" {
-			return fmt.Errorf("invalid tcp remote addr:%s", addr)
-		}
-	}
-
-	for _, addr := range r.UDPRemotes {
-		if addr == "" {
-			return fmt.Errorf("invalid udp remote addr:%s", addr)
-		}
-	}
-
-	if len(r.TCPRemotes) == 0 && len(r.UDPRemotes) == 0 {
-		return errors.New("both tcp and udp remotes are empty")
-	}
-	return nil
-}
-
 type Config struct {
-	PATH string
+	PATH string `json:"-"`
 
-	WebPort    int    `json:"web_port,omitempty"`
-	WebToken   string `json:"web_token,omitempty"`
-	EnablePing bool   `json:"enable_ping,omitempty"`
-	LogLeveL   string `json:"log_level,omitempty"`
+	NodeLabel   string `json:"node_label,omitempty"`
+	WebHost     string `json:"web_host,omitempty"`
+	WebPort     int    `json:"web_port,omitempty"`
+	WebToken    string `json:"web_token,omitempty"`
+	WebAuthUser string `json:"web_auth_user,omitempty"`
+	WebAuthPass string `json:"web_auth_pass,omitempty"`
 
-	RelayConfigs        []RelayConfig `json:"relay_configs"`
-	XRayConfig          *conf.Config  `json:"xray_config,omitempty"`
-	SyncTrafficEndPoint string        `json:"sync_traffic_endpoint"`
+	LogLeveL       string `json:"log_level,omitempty"`
+	EnablePing     bool   `json:"enable_ping,omitempty"`
+	ReloadInterval int    `json:"reload_interval,omitempty"`
+
+	RelayConfigs      []*conf.Config `json:"relay_configs"`
+	RelaySyncURL      string         `json:"relay_sync_url,omitempty"`
+	RelaySyncInterval int            `json:"relay_sync_interval,omitempty"`
+
+	XRayConfig          *xConf.Config `json:"xray_config,omitempty"`
+	SyncTrafficEndPoint string        `json:"sync_traffic_endpoint,omitempty"`
+
+	lastLoadTime time.Time
+	l            *zap.SugaredLogger
 }
 
-func NewConfigByPath(path string) *Config {
-	return &Config{PATH: path, RelayConfigs: []RelayConfig{}}
+func NewConfig(path string) *Config {
+	return &Config{PATH: path, l: zap.S().Named("cfg")}
 }
 
-func (c *Config) NeedSyncUserFromServer() bool {
+func (c *Config) NeedSyncFromServer() bool {
 	return strings.Contains(c.PATH, "http")
 }
 
-func (c *Config) LoadConfig() error {
-	if c.NeedSyncUserFromServer() {
+func (c *Config) LoadConfig(force bool) error {
+	if c.ReloadInterval > 0 && time.Since(c.lastLoadTime).Seconds() < float64(c.ReloadInterval) && !force {
+		c.l.Warnf("Skip Load Config, last load time: %s", c.lastLoadTime)
+		return nil
+	}
+	// reset
+	c.RelayConfigs = nil
+	c.lastLoadTime = time.Now()
+	if c.NeedSyncFromServer() {
 		if err := c.readFromHttp(); err != nil {
 			return err
 		}
@@ -92,7 +65,7 @@ func (c *Config) LoadConfig() error {
 			return err
 		}
 	}
-	return c.Validate()
+	return c.Adjust()
 }
 
 func (c *Config) readFromFile() error {
@@ -100,33 +73,72 @@ func (c *Config) readFromFile() error {
 	if err != nil {
 		return err
 	}
-	println("Load Config From file:", c.PATH)
-	if err != nil {
-		return err
-	}
+	c.l.Infof("Load Config From File: %s", c.PATH)
 	return json.Unmarshal([]byte(file), &c)
 }
 
 func (c *Config) readFromHttp() error {
-	var httpc = &http.Client{Timeout: 10 * time.Second}
-	r, err := httpc.Get(c.PATH)
-	if err != nil {
-		return err
-	}
-	defer r.Body.Close()
-	println("Load Config From http:", c.PATH)
-	return json.NewDecoder(r.Body).Decode(&c)
+	c.l.Infof("Load Config From HTTP: %s", c.PATH)
+	return myhttp.GetJSONWithRetry(c.PATH, &c)
 }
 
-func (c *Config) Validate() error {
-	// validate relay configs
+func (c *Config) Adjust() error {
+	if c.LogLeveL == "" {
+		c.LogLeveL = "info"
+	}
+	if c.WebHost == "" {
+		c.WebHost = "0.0.0.0"
+	}
+
 	for _, r := range c.RelayConfigs {
 		if err := r.Validate(); err != nil {
 			return err
 		}
 	}
-	if c.LogLeveL == "" {
-		c.LogLeveL = "info"
+
+	// check relay config label is unique
+	labelMap := make(map[string]struct{})
+	for _, r := range c.RelayConfigs {
+		if _, ok := labelMap[r.Label]; ok {
+			return fmt.Errorf("relay label %s is not unique", r.Label)
+		}
+		labelMap[r.Label] = struct{}{}
+	}
+	// init tls when need
+	for _, r := range c.RelayConfigs {
+		if r.ListenType == constant.RelayTypeWSS || r.TransportType == constant.RelayTypeWSS {
+			if err := tls.InitTlsCfg(); err != nil {
+				return err
+			}
+			break
+		}
 	}
 	return nil
+}
+
+func (c *Config) NeedStartWebServer() bool {
+	return c.WebPort != 0
+}
+
+func (c *Config) NeedStartXrayServer() bool {
+	return c.XRayConfig != nil
+}
+
+func (c *Config) NeedStartRelayServer() bool {
+	return len(c.RelayConfigs) > 0
+}
+
+func (c *Config) GetMetricURL() string {
+	if !c.NeedStartWebServer() {
+		return ""
+	}
+	url := fmt.Sprintf("http://%s:%d/metrics/", c.WebHost, c.WebPort)
+	if c.WebToken != "" {
+		url += fmt.Sprintf("?token=%s", c.WebToken)
+	}
+	// for basic auth
+	if c.WebAuthUser != "" && c.WebAuthPass != "" {
+		url = fmt.Sprintf("http://%s:%s@%s:%d/metrics/", c.WebAuthUser, c.WebAuthPass, c.WebHost, c.WebPort)
+	}
+	return url
 }

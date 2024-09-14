@@ -3,6 +3,7 @@ package xray
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 )
 
@@ -25,5 +26,6 @@ func postJson(c *http.Client, url string, dataStruct interface{}) error {
 		return err
 	}
 	defer r.Body.Close()
+	_, err = io.ReadAll(r.Body)
 	return err
 }

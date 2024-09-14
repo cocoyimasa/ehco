@@ -1,10 +1,10 @@
 package limiter
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
+	"go.uber.org/zap"
 	"golang.org/x/time/rate"
 )
 
@@ -20,19 +20,22 @@ type IPRateLimiter struct {
 	currentRateM  map[string]*rate.Limiter
 
 	limit rate.Limit // 表示每秒可以放入多少个token到桶中
-	burst int        //表示桶容量大小,即同一时刻能取到的最大token数量
+	burst int        // 表示桶容量大小,即同一时刻能取到的最大token数量
 
-	lastGcTime time.Time //上次gc的时间
+	lastGcTime time.Time // 上次gc的时间
+
+	logger *zap.Logger
 }
 
 // NewIPRateLimiter .
-func NewIPRateLimiter(limit rate.Limit, burst int) *IPRateLimiter {
+func NewIPRateLimiter(limit rate.Limit, burst int, logger *zap.Logger) *IPRateLimiter {
 	i := &IPRateLimiter{
 		previousRateM: make(map[string]*rate.Limiter),
 		currentRateM:  make(map[string]*rate.Limiter),
 		limit:         limit,
 		burst:         burst,
 		lastGcTime:    time.Now(),
+		logger:        logger,
 	}
 	return i
 }
@@ -64,15 +67,13 @@ func (i *IPRateLimiter) GetOreCreateLimiter(ip string) *rate.Limiter {
 	limiter = rate.NewLimiter(i.limit, i.burst)
 	i.currentRateM[ip] = limiter
 	return limiter
-
 }
 
 func (i *IPRateLimiter) gc() {
 	i.Lock()
 	defer i.Unlock()
 	now := time.Now()
-	// todo refine this logger
-	fmt.Printf("[IPRateLimiter] gc alive count=%d\n", len(i.currentRateM))
+	i.logger.Info("[IPRateLimiter] gc start", zap.Int("alive count", len(i.currentRateM)))
 	i.lastGcTime = now
 	i.previousRateM = i.currentRateM
 	i.currentRateM = make(map[string]*rate.Limiter)

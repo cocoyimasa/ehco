@@ -23,3 +23,9 @@ key.pem
 monitor/data/
 main
 ehco
+
+cmd/test/
+localdev/
+
+.vscode/settings.json
+.zed/

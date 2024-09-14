@@ -21,7 +21,7 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "9.2.2"
+      "version": "10.0.3"
     },
     {
       "type": "panel",
@@ -34,6 +34,12 @@
       "id": "prometheus",
       "name": "Prometheus",
       "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
     },
     {
       "type": "panel",
@@ -130,8 +136,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -529,8 +534,9 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "editorMode": "code",
-              "expr": "irate(node_network_receive_bytes_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])*8",
+              "expr": "irate(node_network_receive_bytes_total{job=\"$job\",instance=~\"$instance\"}[$__rate_interval])*8",
               "format": "time_series",
+              "hide": false,
               "intervalFactor": 1,
               "legendFormat": "recv {{device}}",
               "range": true,
@@ -542,10 +548,13 @@
                 "type": "prometheus",
                 "uid": "${DS_PROMETHEUS}"
               },
-              "expr": "irate(node_network_transmit_bytes_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])*8",
+              "editorMode": "code",
+              "expr": "irate(node_network_transmit_bytes_total{job=\"$job\",instance=~\"$instance\"}[$__rate_interval])*8",
               "format": "time_series",
+              "hide": false,
               "intervalFactor": 1,
-              "legendFormat": "trans {{device}} ",
+              "legendFormat": "trans {{device}}",
+              "range": true,
               "refId": "B",
               "step": 240
             }
@@ -601,8 +610,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -749,7 +757,7 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "editorMode": "code",
-              "expr": "sum by(instance) (irate(node_cpu_seconds_total{instance=\"$node\",job=\"$job\", mode=\"system\"}[$__rate_interval])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])))",
+              "expr": "sum by(instance) (irate(node_cpu_seconds_total{job=\"$job\",instance=~\"$instance\", mode=\"system\"}[$__rate_interval])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{job=\"$job\",instance=~\"$instance\"}[$__rate_interval])))",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 1,
@@ -764,7 +772,7 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "editorMode": "code",
-              "expr": "sum by(instance) (irate(node_cpu_seconds_total{instance=\"$node\",job=\"$job\", mode=\"user\"}[$__rate_interval])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])))",
+              "expr": "sum by(instance) (irate(node_cpu_seconds_total{job=\"$job\",instance=~\"$instance\", mode=\"user\"}[$__rate_interval])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{job=\"$job\",instance=~\"$instance\"}[$__rate_interval])))",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 1,
@@ -779,7 +787,7 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "editorMode": "code",
-              "expr": "sum by(instance) (irate(node_cpu_seconds_total{instance=\"$node\",job=\"$job\", mode=\"iowait\"}[$__rate_interval])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])))",
+              "expr": "sum by(instance) (irate(node_cpu_seconds_total{job=\"$job\",instance=~\"$instance\", mode=\"iowait\"}[$__rate_interval])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{job=\"$job\",instance=~\"$instance\"}[$__rate_interval])))",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "Busy Iowait",
@@ -793,7 +801,7 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "editorMode": "code",
-              "expr": "sum by(instance) (irate(node_cpu_seconds_total{instance=\"$node\",job=\"$job\", mode=~\".*irq\"}[$__rate_interval])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])))",
+              "expr": "sum by(instance) (irate(node_cpu_seconds_total{job=\"$job\",instance=~\"$instance\", mode=~\".*irq\"}[$__rate_interval])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{job=\"$job\",instance=~\"$instance\"}[$__rate_interval])))",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "Busy IRQs",
@@ -807,7 +815,7 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "editorMode": "code",
-              "expr": "sum by(instance) (irate(node_cpu_seconds_total{instance=\"$node\",job=\"$job\", mode!='idle',mode!='user',mode!='system',mode!='iowait',mode!='irq',mode!='softirq'}[$__rate_interval])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])))",
+              "expr": "sum by(instance) (irate(node_cpu_seconds_total{job=\"$job\",instance=~\"$instance\", mode!='idle',mode!='user',mode!='system',mode!='iowait',mode!='irq',mode!='softirq'}[$__rate_interval])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{job=\"$job\",instance=~\"$instance\"}[$__rate_interval])))",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "Busy Other",
@@ -821,7 +829,7 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "editorMode": "code",
-              "expr": "sum by(instance) (irate(node_cpu_seconds_total{instance=\"$node\",job=\"$job\", mode=\"idle\"}[$__rate_interval])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])))",
+              "expr": "sum by(instance) (irate(node_cpu_seconds_total{job=\"$job\",instance=~\"$instance\", mode=\"idle\"}[$__rate_interval])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{job=\"$job\",instance=~\"$instance\"}[$__rate_interval])))",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "Idle",
@@ -881,8 +889,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -1290,11 +1297,13 @@
                 "type": "prometheus",
                 "uid": "${DS_PROMETHEUS}"
               },
-              "expr": "node_memory_MemTotal_bytes{instance=\"$node\",job=\"$job\"}",
+              "editorMode": "code",
+              "expr": "node_memory_MemTotal_bytes{job=\"$job\",instance=~\"$instance\"}",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 1,
               "legendFormat": "RAM Total",
+              "range": true,
               "refId": "A",
               "step": 240
             },
@@ -1303,11 +1312,13 @@
                 "type": "prometheus",
                 "uid": "${DS_PROMETHEUS}"
               },
-              "expr": "node_memory_MemTotal_bytes{instance=\"$node\",job=\"$job\"} - node_memory_MemFree_bytes{instance=\"$node\",job=\"$job\"} - (node_memory_Cached_bytes{instance=\"$node\",job=\"$job\"} + node_memory_Buffers_bytes{instance=\"$node\",job=\"$job\"} + node_memory_SReclaimable_bytes{instance=\"$node\",job=\"$job\"})",
+              "editorMode": "code",
+              "expr": "node_memory_MemTotal_bytes{job=\"$job\",instance=~\"$instance\"} - node_memory_MemFree_bytes{job=\"$job\",instance=~\"$instance\"} - (node_memory_Cached_bytes{job=\"$job\",instance=~\"$instance\"} + node_memory_Buffers_bytes{job=\"$job\",instance=~\"$instance\"} + node_memory_SReclaimable_bytes{job=\"$job\",instance=~\"$instance\"})",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 1,
               "legendFormat": "RAM Used",
+              "range": true,
               "refId": "B",
               "step": 240
             },
@@ -1316,10 +1327,12 @@
                 "type": "prometheus",
                 "uid": "${DS_PROMETHEUS}"
               },
-              "expr": "node_memory_Cached_bytes{instance=\"$node\",job=\"$job\"} + node_memory_Buffers_bytes{instance=\"$node\",job=\"$job\"} + node_memory_SReclaimable_bytes{instance=\"$node\",job=\"$job\"}",
+              "editorMode": "code",
+              "expr": "node_memory_Cached_bytes{job=\"$job\",instance=~\"$instance\"} + node_memory_Buffers_bytes{job=\"$job\",instance=~\"$instance\"} + node_memory_SReclaimable_bytes{job=\"$job\",instance=~\"$instance\"}",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "RAM Cache + Buffer",
+              "range": true,
               "refId": "C",
               "step": 240
             },
@@ -1328,10 +1341,12 @@
                 "type": "prometheus",
                 "uid": "${DS_PROMETHEUS}"
               },
-              "expr": "node_memory_MemFree_bytes{instance=\"$node\",job=\"$job\"}",
+              "editorMode": "code",
+              "expr": "node_memory_MemFree_bytes{job=\"$job\",instance=~\"$instance\"}",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "RAM Free",
+              "range": true,
               "refId": "D",
               "step": 240
             },
@@ -1340,10 +1355,12 @@
                 "type": "prometheus",
                 "uid": "${DS_PROMETHEUS}"
               },
-              "expr": "(node_memory_SwapTotal_bytes{instance=\"$node\",job=\"$job\"} - node_memory_SwapFree_bytes{instance=\"$node\",job=\"$job\"})",
+              "editorMode": "code",
+              "expr": "(node_memory_SwapTotal_bytes{job=\"$job\",instance=~\"$instance\"} - node_memory_SwapFree_bytes{job=\"$job\",instance=~\"$instance\"})",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "SWAP Used",
+              "range": true,
               "refId": "E",
               "step": 240
             }
@@ -1400,8 +1417,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -1440,10 +1456,12 @@
                 "type": "prometheus",
                 "uid": "${DS_PROMETHEUS}"
               },
-              "expr": "100 - ((node_filesystem_avail_bytes{instance=\"$node\",job=\"$job\",device!~'rootfs'} * 100) / node_filesystem_size_bytes{instance=\"$node\",job=\"$job\",device!~'rootfs'})",
+              "editorMode": "code",
+              "expr": "100 - ((node_filesystem_avail_bytes{job=\"$job\",instance=~\"$instance\",device!~'rootfs'} * 100) / node_filesystem_size_bytes{job=\"$job\",instance=~\"$instance\",device!~'rootfs'})",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{mountpoint}}",
+              "range": true,
               "refId": "A",
               "step": 240
             }
@@ -1548,7 +1566,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "9.2.2",
+      "pluginVersion": "10.0.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1653,7 +1671,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "9.2.2",
+      "pluginVersion": "10.0.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1762,7 +1780,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "9.2.2",
+      "pluginVersion": "10.0.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1902,11 +1920,11 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "histogram_quantile(0.90, sum(rate(ehco_traffic_handshake_duration_bucket{remote=~\"$remote\"}[$__rate_interval])) by (le,remote))",
+          "expr": "histogram_quantile(0.90, sum(rate(ehco_traffic_handshake_duration_bucket{job=\"$job\",instance=~\"$instance\"}[$__rate_interval])) by (le,instance,remote))",
           "hide": false,
           "instant": false,
           "interval": "",
-          "legendFormat": "{{remote}}",
+          "legendFormat": "{{instance}} - {{remote}}",
           "range": true,
           "refId": "A"
         }
@@ -1947,6 +1965,9 @@
       "id": 50,
       "links": [],
       "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -1955,11 +1976,9 @@
           "fields": "",
           "values": false
         },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true,
-        "text": {}
+        "textMode": "auto"
       },
-      "pluginVersion": "9.2.2",
+      "pluginVersion": "10.0.3",
       "targets": [
         {
           "datasource": {
@@ -1967,7 +1986,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum(ehco_traffic_network_transmit_bytes{hostname=~\"$hostname\",remote=~\"$remote\"}) by (hostname,remote)",
+          "expr": "sum(ehco_traffic_network_transmit_bytes{job=\"$job\",instance=~\"$instance\",remote=~\"$remote\"}) by (instance,job,remote)",
           "hide": false,
           "instant": false,
           "interval": "",
@@ -1976,7 +1995,7 @@
         }
       ],
       "title": "流量消耗",
-      "type": "gauge"
+      "type": "stat"
     },
     {
       "datasource": {
@@ -2050,7 +2069,9 @@
           ],
           "displayMode": "table",
           "placement": "right",
-          "showLegend": true
+          "showLegend": true,
+          "sortBy": "Last *",
+          "sortDesc": true
         },
         "tooltip": {
           "mode": "multi",
@@ -2065,8 +2086,8 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "irate(ehco_traffic_network_transmit_bytes{hostname=~\"$hostname\",remote=~\"$remote\",flow=\"read\"}[$__rate_interval]) * 8",
-          "legendFormat": "{{remote}}-{{type}}-read",
+          "expr": "irate(ehco_traffic_network_transmit_bytes{job=\"$job\",instance=~\"$instance\",flow=\"read\"}[$__rate_interval]) * 8",
+          "legendFormat": "{{instance}} - {{remote}}-{{type}}-read",
           "range": true,
           "refId": "A"
         },
@@ -2076,9 +2097,9 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "-irate(ehco_traffic_network_transmit_bytes{hostname=~\"$hostname\",remote=~\"$remote\",flow=\"write\"}[$__rate_interval]) * 8",
+          "expr": "-irate(ehco_traffic_network_transmit_bytes{job=\"$job\",instance=~\"$instance\",flow=\"write\"}[$__rate_interval]) * 8",
           "hide": false,
-          "legendFormat": "{{remote}}-{{type}}-write",
+          "legendFormat": "{{instance}} - {{remote}}-{{type}}-write",
           "range": true,
           "refId": "B"
         }
@@ -2142,32 +2163,7 @@
           },
           "unit": "short"
         },
-        "overrides": [
-          {
-            "__systemRef": "hideSeriesFrom",
-            "matcher": {
-              "id": "byNames",
-              "options": {
-                "mode": "exclude",
-                "names": [
-                  "-0.0.0.0:5201-tcp"
-                ],
-                "prefix": "All except:",
-                "readOnly": true
-              }
-            },
-            "properties": [
-              {
-                "id": "custom.hideFrom",
-                "value": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": true
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 9,
@@ -2198,11 +2194,11 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum(ehco_traffic_current_connection_count{type=\"udp\"}) by (hostname)",
-          "hide": true,
-          "legendFormat": "{{remote}}-udp",
+          "expr": "sum(ehco_traffic_current_connection_count{job=\"$job\",type=\"tcp\",instance=~\"$instance\"}) by (instance,remote)",
+          "hide": false,
+          "legendFormat": "{{instance}} - {{remote}}-tcp",
           "range": true,
-          "refId": "A"
+          "refId": "B"
         },
         {
           "datasource": {
@@ -2210,18 +2206,18 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "ehco_traffic_current_connection_count{type=\"tcp\"}",
+          "expr": "sum(ehco_traffic_current_connection_count{job=\"$job\",type=\"udp\",instance=~\"$instance\"}) by (instance,remote)",
           "hide": false,
-          "legendFormat": "{{remote}}-tcp",
+          "legendFormat": "{{instance}} - {{remote}}-udp",
           "range": true,
-          "refId": "B"
+          "refId": "C"
         }
       ],
       "title": "实时连接数",
       "type": "timeseries"
     },
     {
-      "collapsed": true,
+      "collapsed": false,
       "datasource": {
         "type": "loki",
         "uid": "XAti9KCnk"
@@ -2233,180 +2229,183 @@
         "y": 41
       },
       "id": 31,
-      "panels": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
-              "unit": "short"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 6,
-            "w": 24,
-            "x": 0,
-            "y": 42
-          },
-          "id": 49,
-          "links": [],
-          "options": {
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "showThresholdLabels": false,
-            "showThresholdMarkers": true,
-            "text": {}
-          },
-          "pluginVersion": "9.2.2",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "expr": "sum(ehco_ping_requests_total{}) by (hostname)",
-              "hide": false,
-              "instant": false,
-              "interval": "",
-              "legendFormat": "{{hostname}}",
-              "refId": "A"
-            }
-          ],
-          "title": "Ping Total",
-          "type": "gauge"
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "fill": 0,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 9,
-            "w": 24,
-            "x": 0,
-            "y": 48
-          },
-          "hiddenSeries": false,
-          "id": 35,
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": false,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "sort": "avg",
-            "sortDesc": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 2,
-          "links": [],
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": false
-          },
-          "percentage": false,
-          "pluginVersion": "9.2.2",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "expr": "histogram_quantile(0.9,sum(rate(ehco_ping_response_duration_seconds_bucket{hostname=\"$hostname\"}[1m])) by (label,host,le))",
-              "hide": false,
-              "instant": false,
-              "interval": "",
-              "intervalFactor": 1,
-              "legendFormat": "{{label}}-{{host}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeRegions": [],
-          "title": "Ping Latency",
-          "tooltip": {
-            "shared": true,
-            "sort": 1,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:765",
-              "format": "s",
-              "label": "",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:766",
-              "format": "short",
-              "logBase": 1,
-              "show": false
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
-        }
-      ],
+      "panels": [],
       "title": "ehco ping metrics",
       "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 42
+      },
+      "id": 49,
+      "links": [],
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto",
+        "text": {}
+      },
+      "pluginVersion": "10.0.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "sum(ehco_ping_requests_total{}) by (instance)",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{hostname}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Ping Total",
+      "type": "gauge"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "fill": 0,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      },
+      "hiddenSeries": false,
+      "id": 35,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "sort": "avg",
+        "sortDesc": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 2,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": false
+      },
+      "percentage": false,
+      "pluginVersion": "10.0.3",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.9,sum(rate(ehco_ping_response_duration_seconds_bucket{instance=~\"$instance\"}[1m])) by (label,host,le))",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "{{label}}-{{host}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "Ping Latency",
+      "tooltip": {
+        "shared": true,
+        "sort": 1,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:765",
+          "format": "s",
+          "label": "",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:766",
+          "format": "short",
+          "logBase": 1,
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
     }
   ],
   "refresh": "5s",
-  "schemaVersion": 37,
+  "schemaVersion": 38,
   "style": "dark",
   "tags": [
     "go",
@@ -2421,7 +2420,7 @@
           "uid": "${DS_PROMETHEUS}"
         },
         "definition": "label_values(go_goroutines, job)",
-        "hide": 2,
+        "hide": 0,
         "includeAll": false,
         "label": "",
         "multi": false,
@@ -2446,63 +2445,12 @@
           "type": "prometheus",
           "uid": "${DS_PROMETHEUS}"
         },
-        "definition": "label_values(go_goroutines{job=\"$job\"}, instance)",
-        "hide": 0,
-        "includeAll": true,
-        "label": "instance",
-        "multi": true,
-        "name": "instance",
-        "options": [],
-        "query": {
-          "query": "label_values(go_goroutines{job=\"$job\"}, instance)",
-          "refId": "StandardVariableQuery"
-        },
-        "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "tagValuesQuery": "",
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
-      },
-      {
-        "current": {},
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
-        },
-        "definition": "label_values(ehco_alive_state,hostname)",
-        "hide": 0,
-        "includeAll": true,
-        "multi": true,
-        "name": "hostname",
-        "options": [],
-        "query": {
-          "query": "label_values(ehco_alive_state,hostname)",
-          "refId": "StandardVariableQuery"
-        },
-        "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "tagValuesQuery": "",
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
-      },
-      {
-        "current": {},
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
-        },
         "definition": "label_values(node_uname_info{job=\"$job\"}, instance)",
         "hide": 0,
         "includeAll": false,
-        "label": "Host:",
-        "multi": false,
-        "name": "node",
+        "label": "instance",
+        "multi": true,
+        "name": "instance",
         "options": [],
         "query": {
           "query": "label_values(node_uname_info{job=\"$job\"}, instance)",
@@ -2516,16 +2464,17 @@
       },
       {
         "current": {},
-        "definition": "label_values(ehco_traffic_network_transmit_bytes{hostname=\"$hostname\"},remote)",
+        "definition": "label_values(ehco_traffic_network_transmit_bytes{job=\"$job\",instance=~\"$instance\"},remote)",
+        "description": "remove of relay",
         "hide": 0,
-        "includeAll": true,
+        "includeAll": false,
         "label": "remote",
         "multi": true,
         "name": "remote",
         "options": [],
         "query": {
-          "query": "label_values(ehco_traffic_network_transmit_bytes{hostname=\"$hostname\"},remote)",
-          "refId": "StandardVariableQuery"
+          "query": "label_values(ehco_traffic_network_transmit_bytes{job=\"$job\",instance=~\"$instance\"},remote)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 1,
         "regex": "",
@@ -2536,7 +2485,7 @@
     ]
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-3h",
     "to": "now"
   },
   "timepicker": {
@@ -2565,8 +2514,8 @@
     ]
   },
   "timezone": "",
-  "title": "中转节点",
+  "title": "中转节点-new",
   "uid": "CgCw8jKZz",
-  "version": 13,
+  "version": 24,
   "weekStart": ""
 }
